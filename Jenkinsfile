@@ -34,7 +34,7 @@ pipeline {
 		    sh 'docker tag asg:latest 521525530234.dkr.ecr.us-east-1.amazonaws.com/asg:latest'
 		    sh 'docker push 521525530234.dkr.ecr.us-east-1.amazonaws.com/asg:latest'
                 }
-            }
+            
     	}
     	
 	   
