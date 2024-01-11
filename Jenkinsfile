@@ -30,8 +30,9 @@ pipeline {
 
 	stage('Push') {
             steps {
+		    sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 521525530234.dkr.ecr.us-east-1.amazonaws.com"
                 script{
-                    sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 521525530234.dkr.ecr.us-east-1.amazonaws.com"
+                    
                     app.push("latest")
                     }
                 }
