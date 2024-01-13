@@ -28,15 +28,15 @@ pipeline {
             }
     }
 
-	stage('Push') {
-            steps {
-                script{
-                    docker.withRegistry('https://749006184614.dkr.ecr.us-east-1.amazonaws.com', 'aws-credentials') {
-                    app.push("latest")
-                    }
-                }
-            }
-    	}
+	stage('Pushing to ECR') {
+ 		steps{ 
+		 script {
+	 		sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 749006184614.dkr.ecr.us-east-1.amazonaws.com"
+			sh "docker tag asg:latest 749006184614.dkr.ecr.us-east-1.amazonaws.com/asg:latest"
+ 			sh "docker push 749006184614.dkr.ecr.us-east-1.amazonaws.com/asg:latest"
+			 }
+		 }
+ 	}
 
     	
 	   
