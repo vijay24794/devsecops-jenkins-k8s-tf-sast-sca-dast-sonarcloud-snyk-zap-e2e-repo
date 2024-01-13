@@ -22,6 +22,7 @@ pipeline {
             steps { 
                withDockerRegistry([credentialsId: "dockerlogin", url: ""]) {
                  script{
+		 sh "docker system prune "
                  app =  docker.build("asg")
                  }
                }
