@@ -30,12 +30,14 @@ pipeline {
 
 	stage('Push') {
             steps {
-                sh 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 521525530234.dkr.ecr.us-east-1.amazonaws.com'
-		    sh 'docker tag asg:latest 521525530234.dkr.ecr.us-east-1.amazonaws.com/asg:latest'
-		    sh 'docker push 521525530234.dkr.ecr.us-east-1.amazonaws.com/asg:latest'
+                script{
+                    docker.withRegistry('https://749006184614.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:aws-credentials') {
+                    app.push("latest")
+                    }
                 }
-            
+            }
     	}
+
     	
 	   
 	stage('Kubernetes Deployment of ASG Bugg Web Application') {
