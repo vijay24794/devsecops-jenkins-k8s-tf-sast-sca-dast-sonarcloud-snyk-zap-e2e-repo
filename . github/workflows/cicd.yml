@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: maven:3.5.2
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Compile and Run Sonar Analysis
+        run: mvn clean verify sonar:sonar -Dsonar.projectKey=asgbuggywebapp24 -Dsonar.organization=asgbuggywebapp24 -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=211304c23a3837dd6dddfaf59e1ffddb3f66e168
+      - name: Run SCA Analysis Using Snyk
+        run: mvn snyk:test -fn
+      - name: Build
+        run: docker system prune && docker build -t asg .
+      - name: Pushing to ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 749006184614.dkr.ecr.us-east-1.amazonaws.com
+          docker tag asg:latest 749006184614.dkr.ecr.us-east-1.amazonaws.com/asg:latest
+          docker push 749006184614.dkr.ecr.us-east-1.amazonaws.com/asg:latest
+      - name: Kubernetes Deployment of ASG Bugg Web Application
+        uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+      - run: |
+          kubectl delete all --all -n devsecops
+          kubectl apply -f deployment.yaml --namespace=devsecops
+      - name: Wait for testing
+        run: pwd; sleep 180; echo "Application Has been deployed on K8S"
+      - name: Run DAST Using ZAP
+        run: |
+          zap.sh -cmd -quickurl http://$(kubectl get services/asgbuggy --namespace=devsecops -o json| jq -r ".status.loadBalancer.ingress[] | .hostname") -quickprogress -quickout ${GITHUB_WORKSPACE}/zap_report.html
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: zap_report
+          path: zap_report.html
