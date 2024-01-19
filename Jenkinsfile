@@ -6,7 +6,7 @@ pipeline {
    stages{
     stage('CompileandRunSonarAnalysis') {
             steps {	
-		sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=asgbuggywebapp24 -Dsonar.organization=asgbuggywebapp24 -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=211304c23a3837dd6dddfaf59e1ffddb3f66e168'
+		sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=DevSecOps_E2E -Dsonar.organization=dso24-org -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=211304c23a3837dd6dddfaf59e1ffddb3f66e168'
 			}
     }
 
@@ -22,24 +22,21 @@ pipeline {
             steps { 
                withDockerRegistry([credentialsId: "dockerlogin", url: ""]) {
                  script{
-		 sh "docker system prune "
                  app =  docker.build("asg")
                  }
                }
             }
     }
 
-	stage('Pushing to ECR') {
- 		steps{ 
-		 script {
-	 		sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 749006184614.dkr.ecr.us-east-1.amazonaws.com"
-			sh "docker tag asg:latest 749006184614.dkr.ecr.us-east-1.amazonaws.com/asg:latest"
- 			sh "docker push 749006184614.dkr.ecr.us-east-1.amazonaws.com/asg:latest"
-			 }
-		 }
- 	}
-
-    	
+	stage('Push') {
+            steps {
+                script{
+                    docker.withRegistry('https://658382981744.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:aws-credentials') {
+                    app.push("latest")
+                    }
+                }
+            }
+    	}
 	   
 	stage('Kubernetes Deployment of ASG Bugg Web Application') {
 	   steps {
