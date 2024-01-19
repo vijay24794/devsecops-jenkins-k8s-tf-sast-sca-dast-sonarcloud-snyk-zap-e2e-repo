@@ -41,7 +41,6 @@ pipeline {
 	stage('Kubernetes Deployment of DSO Bugg Web Application') {
 	   steps {
 	      withKubeConfig([credentialsId: 'kubelogin']) {
-		  sh('aws eks update-kubeconfig --name devsecops-k8s --region us-east-1')
 		  sh('kubectl delete all --all -n devsecops')
 		  sh ('kubectl apply -f deployment.yaml --namespace=devsecops')
 		}
